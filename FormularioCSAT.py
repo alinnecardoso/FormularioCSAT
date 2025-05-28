@@ -1,21 +1,31 @@
-
 import streamlit as st
 import gspread
 import json
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 
-# Autenticação segura com Google Sheets via secrets
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-credentials = json.loads(st.secrets["gcp_service_account"])
-creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials, scope)
-client = gspread.authorize(creds)
+# ✅ Configuração da página
+st.set_page_config(
+    page_title="Formulário de CSAT",
+    layout="centered",
+    initial_sidebar_state="collapsed"
+)
 
-# Conecta na aba "Respostas_CSAT"
-sheet = client.open_by_key("1iT8qsuCqCpm-59PsfAe8B1dmwHg4gX7rJ09x-b_43sg").worksheet("Respostas_CSAT")
+# ✅ Autenticação com Google Sheets
+try:
+    scope = [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/drive"
+    ]
+    credentials = json.loads(st.secrets["gcp_service_account"])
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials, scope)
+    client = gspread.authorize(creds)
+    sheet = client.open_by_key("1iT8qsuCqCpm-59PsfAe8B1dmwHg4gX7rJ09x-b_43sg").worksheet("Respostas_CSAT")
+except Exception as e:
+    st.error("Erro ao conectar com o Google Sheets. Verifique as credenciais.")
+    st.stop()
 
-# Formulário visualmente melhorado
-st.set_page_config(page_title="Formulário de CSAT", layout="centered", initial_sidebar_state="collapsed")
+# ✅ Título
 st.title("📋 Formulário de CSAT")
 
 # --- Seção 1: Informações da empresa ---
@@ -60,13 +70,17 @@ if st.button("📤 Enviar Resposta"):
     if not empresa or not consultor:
         st.warning("⚠️ Por favor, preencha os campos obrigatórios: Empresa e Consultor.")
     else:
-        data = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        valores = [
-            data, empresa, custid, consultor,
-            satisfeito, relacionamento, resultados,
-            assuntos, sugestoes,
-            resultados_negocio, objetivos_atuais,
-            media_notas, situacao, observacoes
-        ]
-        sheet.append_row(valores)
-        st.success("✅ Resposta enviada com sucesso!")
+        try:
+            data = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            valores = [
+                data, empresa, custid, consultor,
+                satisfeito, relacionamento, resultados,
+                assuntos, sugestoes,
+                resultados_negocio, objetivos_atuais,
+                media_notas, situacao, observacoes
+            ]
+            sheet.append_row(valores)
+            st.success("✅ Resposta enviada com sucesso!")
+        except Exception as e:
+            st.error("Erro ao enviar resposta. Verifique conexão ou permissões da planilha.")
+
