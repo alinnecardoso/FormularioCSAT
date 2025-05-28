@@ -1,19 +1,21 @@
 
 import streamlit as st
 import gspread
+import json
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 
-# Autenticação com o Google Sheets
+# Autenticação segura com Google Sheets via secrets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name(
-    "/home/alinne/PycharmProjects/TesteComExcel/FormularioCSAT/formulariocsat-e2d8a2fab800.json", scope)
+credentials = json.loads(st.secrets["gcp_service_account"])
+creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials, scope)
 client = gspread.authorize(creds)
 
 # Conecta na aba "Respostas_CSAT"
 sheet = client.open_by_key("1iT8qsuCqCpm-59PsfAe8B1dmwHg4gX7rJ09x-b_43sg").worksheet("Respostas_CSAT")
 
 # Formulário visualmente melhorado
+st.set_page_config(page_title="Formulário de CSAT", layout="centered", initial_sidebar_state="collapsed")
 st.title("📋 Formulário de CSAT")
 
 # --- Seção 1: Informações da empresa ---
